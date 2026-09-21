@@ -1,0 +1,186 @@
+# Agentic pager-duty fix engine.
+#
+# Install as `.github/workflows/pager-duty-fix.yml` in devtron-labs/sprint-tasks,
+# alongside `.github/pager/` (this directory's bin/, prompts/, schemas/,
+# settings/ and context/). See action/README.md for the install steps.
+#
+# Note what this workflow does NOT use: `anthropics/claude-code-action`. That
+# action is one agent session scoped to the repository that triggered it -- its
+# GitHub App token is, in Anthropic's own words, "scoped specifically to the
+# repository it's operating in" and "cannot access other repositories". Every
+# fix this pipeline produces lands in one of eight *other* repos, and the
+# pipeline needs four separate sessions with hard gates between them. So the
+# workflow drives the headless CLI directly and does its own GitHub writes with
+# `gh`. README.md §"Why not the Claude Code GitHub Action" has the full argument.
+
+name: Pager-duty fix engine
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: "sprint-tasks issue number to run against"
+        required: true
+        type: string
+      dry_run:
+        description: "Run every stage but publish nothing (no branch, no PR, no comment)"
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  # One run per ticket. A second `labeled` event must not race the first.
+  group: pager-fix-${{ github.event.issue.number || inputs.issue }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  fix:
+      # Label gate. Deliberately NOT 'pager-duty' -- that is applied to every pager
+      # issue by the normal human process, so triggering on it would run the agent on
+      # everything. 'agent-fix' is explicit opt-in: a human (or later the triage agent)
+      # adds it to ask for an attempt on this one. It is also the rollout control --
+      # nothing runs until somebody labels something. Manual dispatch is unconditional.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.label.name == 'agent-fix'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    env:
+      # PAGER_RUN_DIR and PAGER_WORKSPACE are set in the first step, not here:
+      # the `runner` context is not available in a job-level `env:` block, and
+      # referencing it there makes the whole workflow fail to parse -- it does
+      # not even reach the Actions tab, and `workflow_dispatch` 422s.
+      PAGER_CONTEXT_DIR: ${{ github.workspace }}/.github/pager/context
+      PAGER_ISSUE_REPO: ${{ github.repository }}
+      PAGER_GH_OWNER: devtron-labs
+      PAGER_BASE_BRANCH: main
+      ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue }}
+
+    steps:
+      - name: Runner paths
+        run: |
+          echo "PAGER_RUN_DIR=$RUNNER_TEMP/pager-run"       >> "$GITHUB_ENV"
+          echo "PAGER_WORKSPACE=$RUNNER_TEMP/pager-workspace" >> "$GITHUB_ENV"
+
+      - name: Check out sprint-tasks (for the pipeline itself)
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache: false        # the target repos vendor their deps; nothing to cache
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Enable yarn
+        run: corepack enable
+
+      - name: Install Claude Code
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      # Restore yesterday's source-only checkout so the common case is a shallow
+      # fetch rather than eight clones. The prefix restore-key is deliberate: a
+      # stale-but-close workspace plus `git fetch --depth 1` beats a cold clone,
+      # and clone.sh refreshes whatever it finds. No credentials are ever written
+      # into these .git/config files, so this cache is safe to keep.
+      - name: Restore repo cache
+        id: repo-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/pager-workspace
+          key: pager-src-v1-${{ github.run_id }}
+          restore-keys: |
+            pager-src-v1-
+
+      # Read-only installation token, minted fresh and scoped down to exactly what
+      # the agent stages need: clone the eight repos, read this issue. It expires
+      # in an hour and is revoked when the job ends, so there is nothing to rotate.
+      #
+      # The App itself is granted write (publish needs it); `permission-*` narrows
+      # THIS token below that grant. Without the narrowing, the agent stages would
+      # hold a token that can push -- the exact property this split exists to deny.
+      - name: Mint read-only token
+        id: read-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.PAGER_APP_ID }}
+          private-key: ${{ secrets.PAGER_APP_PRIVATE_KEY }}
+          owner: devtron-labs
+          repositories: >-
+            sprint-tasks,devtron,devtron-enterprise,dashboard,devtron-services,
+            devtron-services-enterprise,athena-be,notifier,devtron-fe-common-lib
+          permission-contents: read
+          permission-issues: read
+          permission-metadata: read
+
+      - name: Run the pipeline
+        env:
+          # Subscription auth, the same secret `claude.yml` uses in the code repos.
+          # `stage.sh` shells out to the `claude` CLI, which reads this directly --
+          # set `ANTHROPIC_API_KEY` here instead to bill an API key. Do not set
+          # both: an empty-but-present key is worse than an absent one.
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Read-only: clones the eight repos and reads the issue. The write-scoped
+          # token is NOT in this step's environment, which is what makes "the fix
+          # agent cannot open a PR" a property of the harness rather than a prompt.
+          # It does not exist yet at all -- it is minted two steps below.
+          PAGER_GITHUB_TOKEN: ${{ steps.read-token.outputs.token }}
+          GH_TOKEN: ${{ steps.read-token.outputs.token }}
+          PAGER_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || '0' }}
+          PAGER_PUBLISH_DEFERRED: "1"
+        run: |
+          chmod +x .github/pager/bin/*.sh
+          .github/pager/bin/run.sh "$ISSUE_NUMBER"
+
+      # Publishing is a separate step so the write token exists for exactly as
+      # long as it takes to push branches and open PRs, and never while an agent
+      # is running. `always()` so a stop is still reported.
+      # Minted AFTER the agent stages have finished, so a token that can push to
+      # devtron-enterprise never coexists with a process writing an unreviewed
+      # patch. `always()` because a refuted fix still has a report to comment.
+      - name: Mint write token
+        id: write-token
+        if: always()
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.PAGER_APP_ID }}
+          private-key: ${{ secrets.PAGER_APP_PRIVATE_KEY }}
+          owner: devtron-labs
+          repositories: >-
+            sprint-tasks,devtron,devtron-enterprise,dashboard,devtron-services,
+            devtron-services-enterprise,athena-be,notifier,devtron-fe-common-lib
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+          permission-metadata: read
+
+      - name: Publish (branches, draft PRs, issue comment)
+        if: always()
+        env:
+          PAGER_GITHUB_TOKEN: ${{ steps.write-token.outputs.token }}
+          GH_TOKEN: ${{ steps.write-token.outputs.token }}
+          PAGER_DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || '0' }}
+        run: .github/pager/bin/publish.sh --from-intent
+
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pager-run-${{ env.ISSUE_NUMBER }}
+          path: |
+            ${{ runner.temp }}/pager-run
+          retention-days: 14
+          if-no-files-found: warn

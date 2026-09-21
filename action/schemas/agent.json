@@ -1,0 +1,99 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outcome", "stop_reason", "root_cause", "causal_chain", "rejected_explanations", "security_sensitive", "unknowns", "repos"],
+  "properties": {
+    "outcome": {
+      "type": "string",
+      "enum": ["fixed", "stopped"],
+      "description": "'fixed' only if you changed code in at least one repo and can defend why the change is correct. 'stopped' for everything else, including 'I found the bug but cannot safely fix it'. Stopping is a successful run."
+    },
+    "stop_reason": {
+      "type": "string",
+      "description": "Empty when outcome is 'fixed'. Otherwise what you could not establish, specifically enough that a human resumes from your work rather than from zero."
+    },
+    "root_cause": {
+      "type": "string",
+      "description": "The specific defect: a missing check, an inverted condition, a wrong column, a swallowed error, a query ignoring a filter. Not the neighbourhood it lives in."
+    },
+    "causal_chain": {
+      "type": "array",
+      "description": "Entry point to defect, one hop per entry. Each hop needs evidence you actually read, not how such code usually works.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["repo", "path", "symbol", "step", "why"],
+        "properties": {
+          "repo": {"type": "string"},
+          "path": {"type": "string", "description": "Relative to the repo root. No repo prefix."},
+          "symbol": {"type": "string"},
+          "step": {"type": "string", "description": "What happens at this hop."},
+          "why": {"type": "string", "description": "The line or call that proves it."}
+        }
+      }
+    },
+    "rejected_explanations": {
+      "type": "array",
+      "description": "Other things that would produce this symptom, and what in the code rules each out. If you cannot rule any out, you have a hypothesis, not a root cause — and outcome is 'stopped'.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["hypothesis", "ruled_out_by"],
+        "properties": {
+          "hypothesis": {"type": "string"},
+          "ruled_out_by": {"type": "string"}
+        }
+      }
+    },
+    "security_sensitive": {
+      "type": "boolean",
+      "description": "True if the change is anywhere near authentication, authorisation, RBAC, casbin, tokens, secrets or tenancy isolation. Set it generously; a false positive costs only extra scrutiny."
+    },
+    "unknowns": {
+      "type": "array",
+      "description": "What the fix depends on that you could not verify from the code. Empty because you did not look is the failure this field exists to catch.",
+      "items": {"type": "string"}
+    },
+    "repos": {
+      "type": "array",
+      "description": "One entry per repo you changed. Empty when outcome is 'stopped'. devtron and devtron-enterprise are always separate entries with separately written diffs.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["repo", "change_summary", "changed_files", "risk", "build", "test", "verified", "not_verified", "verification_plan"],
+        "properties": {
+          "repo": {
+            "type": "string",
+            "enum": ["devtron", "devtron-enterprise", "dashboard", "devtron-services", "devtron-services-enterprise", "athena-be", "notifier", "devtron-fe-common-lib"]
+          },
+          "change_summary": {"type": "string", "description": "What this diff does, in this repo's terms."},
+          "changed_files": {"type": "array", "items": {"type": "string"}},
+          "risk": {"type": "string", "description": "What this change could break, including behaviour changes visible to existing consumers."},
+          "build": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["command", "ok", "output"],
+            "properties": {
+              "command": {"type": "string", "description": "Empty string if you did not build."},
+              "ok": {"type": "boolean", "description": "False if you did not run it. Never true for a build you did not actually see pass."},
+              "output": {"type": "string", "description": "Last lines, or why you could not build."}
+            }
+          },
+          "test": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["command", "ok", "output"],
+            "properties": {
+              "command": {"type": "string"},
+              "ok": {"type": "boolean"},
+              "output": {"type": "string"}
+            }
+          },
+          "verified": {"type": "array", "items": {"type": "string"}, "description": "What you actually established, by doing it."},
+          "not_verified": {"type": "array", "items": {"type": "string"}, "description": "What a reviewer must check because you could not. Be honest and specific; this is the most useful field in the PR."},
+          "verification_plan": {"type": "array", "items": {"type": "string"}, "description": "Steps a human can execute to confirm the fix works, in order."}
+        }
+      }
+    }
+  }
+}
