@@ -116,11 +116,28 @@ async def health(request: Request) -> Response:
     endpoint is safe to leave public alongside the one that has to be.
     """
     settings = load_slack_settings()
+
+    # Reported, not required. A deployment with no webhook config works — gates
+    # park correctly, they are simply never announced, and somebody has to
+    # notice unaided. That exact configuration shipped once and looked perfectly
+    # healthy: ok true, nothing missing, and a ticket sitting at a gate nobody
+    # had been told about. Silence is the failure mode this line exists to break.
+    webhook_unset = [
+        name
+        for name in ("PAGER_PUBLIC_URL", "PAGER_WEBHOOK_SECRET")
+        if not os.environ.get(name, "").strip()
+    ]
+
     return JSONResponse(
         {
             "ok": not settings.missing(),
             "missing_env": settings.missing(),
             "approvers_configured": len(settings.approver_user_ids),
+            # "manual" means someone must run the notifier by hand after a gate
+            # parks. Half-configured counts as manual: either half alone
+            # announces nothing.
+            "gate_notification": "automatic" if not webhook_unset else "manual",
+            "webhook_unset": webhook_unset,
         }
     )
 

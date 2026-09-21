@@ -151,3 +151,46 @@ def test_webhook_secret_round_trips_through_the_route(monkeypatch):
 
     assert r.status_code == 200
     assert calls == ["swept"]
+
+
+# ---------------------------------------------------------------------------
+# Health has to say whether the automation is actually armed.
+
+
+def test_health_reports_the_webhook_as_unarmed(monkeypatch):
+    """A deployment with no webhook config is *functional* — gates park, they
+    just never get announced, and someone has to notice on their own.
+
+    This exact configuration shipped and looked perfectly healthy: `ok: true`,
+    `missing_env: []`, and a ticket that triaged correctly into a gate nobody
+    was told about. Reporting it is the difference between a five-minute fix and
+    an afternoon of wondering why Slack is quiet.
+    """
+    monkeypatch.delenv("PAGER_WEBHOOK_SECRET", raising=False)
+    monkeypatch.delenv("PAGER_PUBLIC_URL", raising=False)
+    r = TestClient(http_app.app).get(http_app.HEALTH_PATH)
+    body = r.json()
+
+    assert body["gate_notification"] == "manual"
+    assert "PAGER_PUBLIC_URL" in body["webhook_unset"]
+    assert "PAGER_WEBHOOK_SECRET" in body["webhook_unset"]
+
+
+def test_health_reports_the_webhook_as_armed(monkeypatch):
+    monkeypatch.setenv("PAGER_WEBHOOK_SECRET", "s")
+    monkeypatch.setenv("PAGER_PUBLIC_URL", "https://x.example")
+    body = TestClient(http_app.app).get(http_app.HEALTH_PATH).json()
+
+    assert body["gate_notification"] == "automatic"
+    assert body["webhook_unset"] == []
+
+
+def test_partial_webhook_config_is_not_automatic(monkeypatch):
+    """Half-configured is manual, not automatic. Either half alone announces
+    nothing, and reporting it as armed would be the same lie in a new place."""
+    monkeypatch.setenv("PAGER_PUBLIC_URL", "https://x.example")
+    monkeypatch.delenv("PAGER_WEBHOOK_SECRET", raising=False)
+    body = TestClient(http_app.app).get(http_app.HEALTH_PATH).json()
+
+    assert body["gate_notification"] == "manual"
+    assert body["webhook_unset"] == ["PAGER_WEBHOOK_SECRET"]
