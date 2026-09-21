@@ -1,0 +1,14 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "triage": "./src/pagerduty_triage/agent.py:make_graph",
+    "poller": "./src/pagerduty_triage/poller_graph.py:make_poller_graph",
+    "slack_notifier": "./src/pagerduty_triage/slack/notifier_graph.py:make_notifier_graph"
+  },
+  "http": {
+    "app": "./src/pagerduty_triage/slack/http_app.py:app"
+  },
+  "env": ".env",
+  "python_version": "3.12"
+}
+

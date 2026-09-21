@@ -1,0 +1,39 @@
+# Slack app manifest for the pager-duty approval gates.
+#
+# Create at https://api.slack.com/apps -> Create New App -> From an app manifest.
+# Pick your workspace, paste this file, Create.
+#
+# The request_url below is a placeholder. Slack does NOT validate an
+# interactivity Request URL when you save it (unlike the Events API), so you can
+# create the app now and set the real tunnel URL later -- but it must be correct
+# before you click a button, or the interaction goes nowhere.
+#
+# Scope is chat:write and nothing else. The interaction handler holds no Slack
+# token at all -- it replies via response_url, which carries its own
+# authorization. Only the notifier posts, and posting is all chat:write buys.
+
+display_information:
+  name: Devtron Pager Agent
+  description: Human approval gates for agentic pager-duty triage
+  background_color: "#2b1c62"
+
+features:
+  bot_user:
+    display_name: Pager Agent
+    always_online: false
+
+oauth_config:
+  scopes:
+    bot:
+      - chat:write
+
+settings:
+  interactivity:
+    is_enabled: true
+    # Replace REPLACE-WITH-TUNNEL with your cloudflared/ngrok hostname.
+    # Path must stay /slack/interactions -- it is defined in
+    # src/pagerduty_triage/slack/http_app.py:58
+    request_url: https://REPLACE-WITH-TUNNEL/slack/interactions
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false
