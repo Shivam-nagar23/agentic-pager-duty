@@ -216,3 +216,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# local clones of target repos (Phase 1 harness)
+workspace/
+
+# Credential backups — .env copies made while toggling flags
+.env.bak*
+.env.*.bak
+
+# JetBrains
+.idea/
+
+# LangGraph local dev state — checkpoints contain customer ticket text
+langgraph_app/.langgraph_api/
