@@ -194,3 +194,28 @@ def test_partial_webhook_config_is_not_automatic(monkeypatch):
 
     assert body["gate_notification"] == "manual"
     assert body["webhook_unset"] == ["PAGER_WEBHOOK_SECRET"]
+
+
+def test_sweep_does_not_run_inline(monkeypatch):
+    """The sweep must not execute during the request.
+
+    `_run_notifier_sweep` uses the *synchronous* SDK client, and the request it
+    makes goes back to this same server. Called inline from an async route it
+    blocks the event loop, so the server cannot answer its own call and the
+    webhook times out — the platform sees no response and the gate is never
+    announced. Observed live: HTTP 000 after 30s.
+
+    Starlette runs a sync BackgroundTask in a threadpool, which both frees the
+    loop and returns to the platform immediately.
+    """
+    monkeypatch.setenv("PAGER_WEBHOOK_SECRET", "s3cret-token")
+    order: list[str] = []
+    monkeypatch.setattr(http_app, "_run_notifier_sweep", lambda: order.append("swept"))
+
+    c = TestClient(http_app.app)
+    with c:
+        r = c.post(f"{http_app.RUN_FINISHED_PATH}?token=s3cret-token", json={})
+        assert r.status_code == 200
+
+    # It still runs — just after the response, off the event loop.
+    assert order == ["swept"]

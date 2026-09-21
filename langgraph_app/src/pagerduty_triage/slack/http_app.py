@@ -190,16 +190,23 @@ async def run_finished(request: Request) -> Response:
     if not expected or not hmac.compare_digest(expected, supplied):
         return PlainTextResponse("forbidden", status_code=403)
 
-    # The platform retries a webhook that does not return 2xx. A Slack outage
-    # must not become a retry storm, so a failed sweep is logged and
-    # acknowledged -- the next parked gate will trigger another sweep anyway,
-    # and `notify_parked_gates` is idempotent.
-    try:
-        _run_notifier_sweep()
-    except Exception:  # noqa: BLE001
-        logger.exception("notifier sweep failed for a run-finished callback")
+    # NOT inline. `_run_notifier_sweep` uses the synchronous SDK client and the
+    # request it makes comes back to *this* server -- called from this async
+    # route it blocks the event loop, so the server cannot answer its own call
+    # and the webhook times out. Observed live as HTTP 000 after 30s, with the
+    # gate never announced. Starlette runs a sync BackgroundTask in a
+    # threadpool, which frees the loop and answers the platform immediately.
+    #
+    # The platform retries a webhook that does not return 2xx, so a failed sweep
+    # is logged and still acknowledged: a Slack outage must not become a retry
+    # storm, and `notify_parked_gates` is idempotent anyway.
+    def _sweep() -> None:
+        try:
+            _run_notifier_sweep()
+        except Exception:  # noqa: BLE001
+            logger.exception("notifier sweep failed for a run-finished callback")
 
-    return PlainTextResponse("ok")
+    return PlainTextResponse("ok", background=BackgroundTask(_sweep))
 
 
 app = Starlette(
