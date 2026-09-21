@@ -1,0 +1,611 @@
+[
+  {
+    "number": 2922,
+    "title": "PagerBug: Bitbucket credentials cannot be added",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2918,
+    "title": "PagerBug: Super admin user issue",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2914,
+    "title": "PagerBug: Application Details Not Visible on Devtron Dashboard After Cluster Secret Update",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2873,
+    "title": "PagerBug: Deployment not auto-triggered after successful pre-deployment",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2846,
+    "title": "PagerBug: RDS CPU Utilization Spike >97% on Delhivery",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2845,
+    "title": "PagerTask: Above 92% Spike in RDS CPU utilization on Delhivery",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2809,
+    "title": "PagerBug: Devtron slowness in 1mg-prod due to CPU throttling on RDS",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2806,
+    "title": "PagerBug: OpenCost Prometheus Endpoint Coupling Issue",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2805,
+    "title": "PagerBug: deployment-metrics is not visible on 6sense",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2780,
+    "title": "PagerBug: App Details page getting timed out on multiple enterprises",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2774,
+    "title": "PagerBug: Image Promotion Policy not working",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2771,
+    "title": "PagerBug: Bulk Deployment Failure RCA",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2767,
+    "title": "PagerBug: App Details Page Slowness in a Specific Environment",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2761,
+    "title": "PagerBug: High-cpu-throttling due to k8s stream pod logs api",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2670,
+    "title": "PagerBug: Unable o clone repository after updating token",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2651,
+    "title": "PagerBug: Panic Issue for Sprint 48",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2647,
+    "title": "PagerBug: Panic Issue for Sprint 47",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2599,
+    "title": "PagerBug: Not able to delete helm app",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2592,
+    "title": "PagerBug: Kubernetes resource namespaces change unexpectedly after Page Refresh",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2581,
+    "title": "PagerBug: Getting pg no rows in result set when changing branch for particular workflow",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2579,
+    "title": "PagerBug: High Memory Utilization leads to OOMKill",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2554,
+    "title": "PagerBug: Scoped variable usage in plugin throws error",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2538,
+    "title": "PagerBug: Unable to trigger the pre/post CD in one Delhivery environment.",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2527,
+    "title": "PagerBug: Port-forward throws Internal Server Error (500) when using kubeconfig",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2511,
+    "title": "PagerBug: Delhivery CI Blocker, Unable to Trigger CI Build",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2491,
+    "title": "PagerBug: orchestrator 100% CPU throttling in CD",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2465,
+    "title": "PagerBug: Panic Issue for Sprint 40",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2464,
+    "title": "PagerBug: Panic Issue for Sprint 40",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2463,
+    "title": "PagerBug: Panic Issue for Sprint 40",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2462,
+    "title": "PagerBug: Panic Issue for Sprint 40",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2461,
+    "title": "PagerBug: Panic Issue for Sprint 40",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2460,
+    "title": "PagerBug: Panic Issue for Sprint 40",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2459,
+    "title": "PagerBug: Panic Issue for Sprint 40",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2458,
+    "title": "PagerBug: Panic Issue for Sprint 40",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2457,
+    "title": "PagerBug: Panic Issue for Sprint 40",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2456,
+    "title": "PagerBug: Panic Issue for Sprint 40",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2449,
+    "title": "PagerBug: Deployments are not getting propagated when done using gitops with autosync disabled on CD",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2443,
+    "title": "PagerBug: Possible memory leak in orchestrator",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2435,
+    "title": "PagerBug: Consistently high CPU usage in 1mg-dev RDS",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2412,
+    "title": "PagerBug: Panic Issue for Sprint 39",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2399,
+    "title": "PagerBug: Panic Issue for Sprint 39",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2383,
+    "title": "PagerBug: Panic Issue for None",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2373,
+    "title": "PagerBug: Panic Issue for Sprint 38",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2367,
+    "title": "PagerBug: Panic Issue for Sprint 38",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2313,
+    "title": "PagerBug:  Panic in installedApp type app timeline update",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2306,
+    "title": "PagerBug: Panic Issue for Sprint 37",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2305,
+    "title": "PagerBug: Panic Issue for Sprint 37",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2249,
+    "title": "PagerBug: Getting 400 while port-forward on BP using Devtron Kube config",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2212,
+    "title": "PagerBug: 73str kubelink consumption of CPU and memory has been high",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2199,
+    "title": "PagerBug: Panic on PATH: ",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2198,
+    "title": "PagerBug: Panic on PATH: ",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2197,
+    "title": "PagerBug: Panic on PATH: ",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2192,
+    "title": "PagerBug: Panic on PATH: /orchestrator/k8s/pods/logs/wms-pick-grv-wms-dev-mum-5cdc7db964-nlzvx",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2191,
+    "title": "PagerBug: Panic on PATH: /orchestrator/k8s/pods/logs/wms-pick-grv-wms-dev-mum-5cdc7db964-nlzvx",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2188,
+    "title": "PagerBug: Panic on PATH: /orchestrator/application/template-chart",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2187,
+    "title": "PagerBug: Panic on PATH: /orchestrator/application/template-chart",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2163,
+    "title": "PagerBug: postgres query failures [DT-35]",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2151,
+    "title": "PagerBug: Deployment showing difference even though there is no difference",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2144,
+    "title": "PagerBug: Panic in Bluecopa in path /orchestrator/k8s/pods/logs/",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2052,
+    "title": "PagerBug: postgres query failures [DT-33]",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2037,
+    "title": "Bug:  CD GitOps deployment timeout",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2016,
+    "title": "PagerBug: Scoop giving internal server error for packet 31",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 2000,
+    "title": "PagerTask: getting illegal base64 data at input byte 4 in Deployment History & Secret Section",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1970,
+    "title": "PagerBug: Build logs are not visible after the build has been completed or failed.",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1925,
+    "title": "PagerBug: Deployment failed on Apica",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1915,
+    "title": "PagerBug: Deployment failed on CD",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1850,
+    "title": "PagerBug: Deployment Failure in Cybel",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1849,
+    "title": "PagerBug: Dockerfile not able to read the variables from Pre-CI",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1815,
+    "title": "PagerBug: Orchestrator is in crashloop state for Ather",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1802,
+    "title": "PagerBug: Unable to deploy one of the Devtron application which was deployed via Helm",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1795,
+    "title": "PagerBug: Visible increase in Resource Usage of Kubelink after release of Packet 26",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1633,
+    "title": "PagerBug: Allow Override failing for one application on 1MG on Build Pipeline",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1624,
+    "title": "PagerBug: [TEST]code-scan is unable to scan code on ",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1581,
+    "title": "Bug: Kubelink crashed due to OOMKill in birdeye prod ",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1561,
+    "title": "Bug: Increase the Number of Count on Topic PANIC-ON-PROCESSING-TOPIC",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1494,
+    "title": "Bug: git-sensor PVC fills up in a couple of minutes",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1468,
+    "title": "Bug: Not able to deploy on a specific env for a particular pipeline on 1MG",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1449,
+    "title": "Bug: panic in path : /orchestrator/global/featureFlag/cloning-mode in staging",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1447,
+    "title": "Bug: Show docker build args got broken from global secret",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1417,
+    "title": "Bug: Unable to delete Helm apps due to Cluster unreachable",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1359,
+    "title": "Bug: code-scan is unable to scan code on zupee",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1340,
+    "title": "Bug: Resource Scanning Not Working on Zupee",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1339,
+    "title": "Bug: Not able to run protect configuration for bulk using devtctl (for all prod)",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1331,
+    "title": "Bug: NATS pending msgs in DEVTRON-CHART-PRIORITY-GITOPS-INSTALL-DURABLE in cyble",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1314,
+    "title": "Bug: panic in orchestrator for path : /orchestrator/application?clusterIds=<>",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1312,
+    "title": "Bug: Chart Pull is not working in OPENSHIFT ENV",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  },
+  {
+    "number": 1309,
+    "title": "Bug: Panic on staging on path : /orchestrator/app/ci-pipeline/patch",
+    "reason": "no_pr_links",
+    "pr_urls": [],
+    "unreadable_prs": []
+  }
+]
