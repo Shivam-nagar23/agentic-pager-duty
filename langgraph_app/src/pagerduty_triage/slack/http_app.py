@@ -43,6 +43,9 @@ which runs *after* the response has been sent.
 
 from __future__ import annotations
 
+import hmac
+import logging
+import os
 from typing import Any
 
 from starlette.applications import Starlette
@@ -57,6 +60,11 @@ from pagerduty_triage.slack.handler import handle_interaction
 #: Namespaced so a custom route cannot shadow a platform endpoint.
 INTERACTIONS_PATH = "/slack/interactions"
 HEALTH_PATH = "/slack/health"
+#: The platform calls this when a run ends -- including when it ends by parking
+#: on an `interrupt()`, which is the case we care about. See `run_finished`.
+RUN_FINISHED_PATH = "/slack/run-finished"
+
+logger = logging.getLogger(__name__)
 
 
 def _deps(settings: SlackSettings) -> tuple[Any, Any]:
@@ -117,9 +125,70 @@ async def health(request: Request) -> Response:
     )
 
 
+def _run_notifier_sweep() -> None:
+    """Post any parked gate that has not been posted yet.
+
+    Starts a run of the ``slack_notifier`` assistant rather than calling
+    ``notify_parked_gates`` inline. That is not indirection for its own sake:
+    the notifier dedupes against the **platform store**, and ``get_store()``
+    only returns the managed store inside a graph. Called inline from this HTTP
+    route it would fall back to an in-memory store, which does not persist --
+    so every callback would re-post every parked gate.
+
+    No ``webhook`` is passed here, so the notifier run finishing does not call
+    this endpoint again. Only triage runs carry the callback.
+
+    Imported lazily and kept behind a module-level name so the tests can
+    replace it without a platform, a Slack token or a network.
+    """
+    from langgraph_sdk import get_sync_client
+
+    settings = load_slack_settings()
+    client = get_sync_client(
+        url=settings.langgraph_api_url or None, api_key=settings.langgraph_api_key or None
+    )
+    client.runs.create(None, "slack_notifier", input={})
+
+
+async def run_finished(request: Request) -> Response:
+    """Called by LangGraph Platform when a run ends.
+
+    This is what replaces the notifier cron. A run that parks on `interrupt()`
+    *ends* -- so the callback fires, and the gate card lands seconds later
+    rather than on the next tick.
+
+    **The boundary is a shared secret in the query string.** Unlike Slack, the
+    platform does not sign its callbacks, and `enable_custom_route_auth` is
+    false so this route bypasses the API key (see the module docstring). An
+    unset secret closes the endpoint rather than opening it, for the same
+    reason an unset Slack signing secret does.
+
+    The payload is deliberately ignored. The sweep re-reads thread state and
+    posts what is actually parked, which makes the callback a *hint* rather than
+    a source of truth -- so a duplicate, a retry, or a callback for an unrelated
+    run all collapse to the same harmless re-check.
+    """
+    expected = os.environ.get("PAGER_WEBHOOK_SECRET", "")
+    supplied = request.query_params.get("token", "")
+    if not expected or not hmac.compare_digest(expected, supplied):
+        return PlainTextResponse("forbidden", status_code=403)
+
+    # The platform retries a webhook that does not return 2xx. A Slack outage
+    # must not become a retry storm, so a failed sweep is logged and
+    # acknowledged -- the next parked gate will trigger another sweep anyway,
+    # and `notify_parked_gates` is idempotent.
+    try:
+        _run_notifier_sweep()
+    except Exception:  # noqa: BLE001
+        logger.exception("notifier sweep failed for a run-finished callback")
+
+    return PlainTextResponse("ok")
+
+
 app = Starlette(
     routes=[
         Route(INTERACTIONS_PATH, interactions, methods=["POST"]),
         Route(HEALTH_PATH, health, methods=["GET"]),
+        Route(RUN_FINISHED_PATH, run_finished, methods=["POST"]),
     ]
 )

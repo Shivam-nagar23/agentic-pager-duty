@@ -15,6 +15,7 @@ accumulate (see README).
 from __future__ import annotations
 
 import os
+from urllib.parse import quote
 from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
@@ -91,9 +92,33 @@ def _platform_client():
                 input=input,
                 config=config,
                 multitask_strategy=multitask_strategy,
+                webhook=run_finished_webhook(),
             )
 
     return PlatformClient()
+
+
+def run_finished_webhook() -> str | None:
+    """Where the platform should call back when this run ends.
+
+    A run that parks on `interrupt()` *ends*, so the callback fires and the gate
+    card is posted seconds later. This is what removes the notifier cron.
+
+    Returns None when either variable is unset, which is the correct local
+    default: `langgraph dev` has no public URL, so there is nothing for the
+    platform to call, and the notifier is ticked by hand. Passing None is the
+    same as not passing it at all.
+
+    The secret is in the query string because the platform does not sign its
+    callbacks and the route bypasses API-key auth. See `slack/http_app.py`.
+    """
+    base = os.environ.get("PAGER_PUBLIC_URL", "").rstrip("/")
+    secret = os.environ.get("PAGER_WEBHOOK_SECRET", "")
+    if not base or not secret:
+        return None
+    from pagerduty_triage.slack.http_app import RUN_FINISHED_PATH
+
+    return f"{base}{RUN_FINISHED_PATH}?token={quote(secret, safe='')}"
 
 
 def _is_conflict(exc: Exception) -> bool:

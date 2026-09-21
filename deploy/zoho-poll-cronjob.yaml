@@ -1,0 +1,110 @@
+# Ticks the Zoho poller on the deployed LangGraph app.
+#
+# Preferred over the GitHub Actions equivalent (.github/workflows/zoho-poll.yml)
+# for one reason that matters: GitHub's scheduler drifts under load and drops
+# ticks entirely when the platform is busy — documented, not occasional. A
+# Kubernetes CronJob fires when it says it will, and `concurrencyPolicy: Forbid`
+# is enforced by the scheduler rather than by a best-effort concurrency group.
+#
+# Keep only one of the two. Running both is harmless — `poll_once` is idempotent
+# on ticket id and `threads.create(if_exists="raise")` is the real
+# once-per-ticket lock, so the loser just reports skipped_conflict — but it
+# doubles the noise for nothing.
+#
+# Deploy to staging. The poller holds no Zoho or GitHub credential; it only
+# reaches the LangGraph deployment, which holds those. So a staging cluster is
+# the right blast radius: if it misbehaves the worst case is tickets not being
+# picked up, not tickets being acted on wrongly.
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: zoho-poll
+  labels:
+    app.kubernetes.io/name: zoho-poll
+    app.kubernetes.io/part-of: agentic-pager-duty
+spec:
+  # Every 5 minutes. Zoho's search index lags writes, so a tighter cadence buys
+  # latency it cannot actually deliver.
+  schedule: "*/5 * * * *"
+  timeZone: "Etc/UTC"
+
+  # Two overlapping polls would both try to claim the same ticket; one loses on
+  # the 409. Correct, but wasteful — so do not start a second.
+  concurrencyPolicy: Forbid
+
+  # A tick that could not start within 2 minutes of its slot is stale: the next
+  # one is imminent and will see the same tickets.
+  startingDeadlineSeconds: 120
+
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      # Do not let a hung curl hold the Forbid lock until the next tick.
+      activeDeadlineSeconds: 300
+      ttlSecondsAfterFinished: 3600
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: poll
+              image: curlimages/curl:8.11.1
+              imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests: { cpu: 10m, memory: 32Mi }
+                limits:   { cpu: 100m, memory: 64Mi }
+              env:
+                - name: LANGGRAPH_API_URL
+                  valueFrom:
+                    secretKeyRef: { name: pager-langgraph, key: api-url }
+                - name: LANGGRAPH_API_KEY
+                  valueFrom:
+                    secretKeyRef: { name: pager-langgraph, key: api-key }
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  # /runs/wait, not /runs: this pod's exit code should reflect
+                  # the poll, not merely that the request was accepted.
+                  code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+                    --max-time 240 --retry 2 --retry-connrefused \
+                    -X POST "${LANGGRAPH_API_URL%/}/runs/wait" \
+                    -H "x-api-key: ${LANGGRAPH_API_KEY}" \
+                    -H 'content-type: application/json' \
+                    -d '{"assistant_id":"poller","input":{}}')
+                  echo "HTTP ${code}"
+                  cat /tmp/out.json; echo
+                  [ "${code}" = "200" ] || exit 1
+                  # A run can return 200 having failed inside the graph. No
+                  # report means the graph did not complete; treat that as a
+                  # failure rather than a quiet success.
+                  grep -q '"report"' /tmp/out.json || { echo "no report — graph did not complete"; exit 1; }
+          volumes: []
+---
+# Created by hand, or by Devtron's secret management. Never committed filled in.
+#
+#   kubectl create secret generic pager-langgraph \
+#     --from-literal=api-url='https://<deployment>.us.langgraph.app' \
+#     --from-literal=api-key='lsv2_...'
+#
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pager-langgraph
+type: Opaque
+stringData:
+  api-url: "REPLACE_ME"
+  api-key: "REPLACE_ME"
