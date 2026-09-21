@@ -211,12 +211,54 @@ def build_agent(deps: ToolDeps, *, checkpointer: Any | None = None):
     not an optional detail: without a checkpointer a gate cannot park.
     """
     return create_deep_agent(
-        model=deps.settings.model,
+        model=resolve_model(deps.settings),
         tools=build_tools(deps),
         system_prompt=MAIN_AGENT_PROMPT,
         subagents=[*_subagents(), _general_purpose_override()],
         middleware=[*_planning_middleware(), *_filesystem_middleware()],
         checkpointer=checkpointer,
+    )
+
+
+def resolve_model(settings: Settings) -> Any:
+    """The model to hand ``create_deep_agent``: a string, or a built model.
+
+    Without a gateway this returns ``settings.model`` unchanged and
+    ``init_chat_model`` resolves it, which is the behaviour this project has
+    always had.
+
+    With ``LLM_GATEWAY_BASE_URL`` set it must return a *built* model, because a
+    provider-prefixed string cannot carry a base URL. That distinction is the
+    whole reason this function exists: passing the string would call the
+    provider directly and **succeed**, silently bypassing the gateway -- no
+    governance, no gateway-side tracing, and a provider key still in use. A
+    failure that looks like success is the one worth a test.
+
+    The LangSmith gateway is OpenAI-compatible (`POST /v1/chat/completions`)
+    and authenticates with a LangSmith key, so models are addressed by prefixed
+    id (`anthropic/claude-opus-5`) through the OpenAI client.
+    """
+    base_url = settings.llm_gateway_base_url.strip()
+    if not base_url:
+        return settings.model
+
+    key = settings.llm_gateway_api_key.strip()
+    if not key:
+        # Falling through here would let ChatOpenAI pick up OPENAI_API_KEY from
+        # the environment and talk to OpenAI instead of the gateway.
+        raise RuntimeError(
+            "LLM_GATEWAY_BASE_URL is set but no gateway key is: set "
+            "LANGSMITH_API_KEY (or LLM_GATEWAY_API_KEY). Refusing to start "
+            "rather than silently bypass the gateway."
+        )
+
+    from langchain.chat_models import init_chat_model
+
+    return init_chat_model(
+        settings.model,
+        model_provider="openai",
+        base_url=base_url,
+        api_key=key,
     )
 
 

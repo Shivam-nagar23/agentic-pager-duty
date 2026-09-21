@@ -70,6 +70,14 @@ class Settings:
     #: is the cheaper option if triage volume makes Opus uneconomic; measure
     #: classification accuracy before downgrading.
     model: str = "anthropic:claude-opus-5"
+    #: Base URL of an OpenAI-compatible LLM gateway. When set, `TRIAGE_MODEL` is
+    #: a gateway model id (`anthropic/claude-opus-5`) rather than a
+    #: provider-prefixed string, and every call routes through the gateway.
+    llm_gateway_base_url: str = ""
+    #: Defaults to LANGSMITH_API_KEY, which is what the LangSmith gateway
+    #: authenticates with. Separate only if the gateway key differs from the
+    #: tracing key.
+    llm_gateway_api_key: str = ""
 
     # -- safety -------------------------------------------------------------
     #: Hard kill switch. With this off, ``zoho_send_reply`` refuses to send
@@ -135,6 +143,8 @@ def load_settings() -> Settings:
         github_token=_env("GITHUB_TOKEN"),
         sprint_tasks_repo=_env("SPRINT_TASKS_REPO", "devtron-labs/sprint-tasks"),
         model=_env("TRIAGE_MODEL", "anthropic:claude-opus-5"),
+        llm_gateway_base_url=_env("LLM_GATEWAY_BASE_URL"),
+        llm_gateway_api_key=_env("LLM_GATEWAY_API_KEY") or _env("LANGSMITH_API_KEY"),
         replies_enabled=_env_bool("REPLIES_ENABLED", False),
         issue_creation_enabled=_env_bool("ISSUE_CREATION_ENABLED", False),
     )

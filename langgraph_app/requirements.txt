@@ -6,6 +6,9 @@ langchain>=1.4,<2
 langgraph>=1.2,<2
 langgraph-sdk>=0.2,<1
 langchain-anthropic>=1.0,<2
+# The LangSmith LLM gateway is OpenAI-compatible, so routing through it goes
+# via ChatOpenAI even when the model behind it is Anthropic on Bedrock.
+langchain-openai>=1.0,<2
 
 # The thin Zoho Desk MCP wrapper (src/pagerduty_triage/mcp_server/).
 # Only needed when ZOHO_TRANSPORT=mcp; harmless otherwise.

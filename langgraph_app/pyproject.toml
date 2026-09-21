@@ -12,6 +12,10 @@ dependencies = [
     "langgraph>=1.2,<2",
     "langgraph-sdk>=0.2,<1",
     "langchain-anthropic>=1.0,<2",
+    # The LangSmith LLM gateway is OpenAI-compatible, so routing through it
+    # goes via ChatOpenAI even when the model behind it is Anthropic on
+    # Bedrock. See agent.resolve_model.
+    "langchain-openai>=1.0,<2",
     "mcp>=1.2",
     "httpx>=0.27",
     # The Slack interaction endpoint (langgraph.json -> http.app). The
