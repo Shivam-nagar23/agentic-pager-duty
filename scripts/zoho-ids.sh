@@ -3,6 +3,10 @@
 # Print the Zoho Desk org id and department ids for a set of OAuth credentials.
 #
 #   scripts/zoho-ids.sh <client-id> <client-secret> <code-or-refresh-token> [dc]
+#   scripts/zoho-ids.sh <client-id> <client-secret> - [dc]   # client credentials
+#
+# Pass "-" as the third argument to use the client-credentials grant, which
+# needs no code at all. Export ZOHO_ORG_ID first if you already know it.
 #
 # `dc` is the data centre: in | com | eu | au | jp | ca | sa   (default: in)
 #
@@ -30,6 +34,23 @@ token_from() {  # grant_type, field, value
 }
 
 say "authenticating"
+if [ "$VAL" = "-" ]; then
+  # No code, no refresh token: client credentials. Needs an org id to scope
+  # `soid`, so this path can only list departments, not discover the org.
+  echo "  client-credentials grant (no code needed)"
+  resp="$(curl -s -X POST "$ACCOUNTS/oauth/v2/token" \
+    -d grant_type=client_credentials -d "client_id=$CID" -d "client_secret=$SEC" \
+    -d "scope=Desk.tickets.READ,Desk.search.READ,Desk.basic.READ,Desk.channels.email.READ" \
+    ${ZOHO_ORG_ID:+-d "soid=ZohoDesk.$ZOHO_ORG_ID"})"
+  if ! echo "$resp" | jq -e '.access_token' >/dev/null 2>&1; then
+    echo "  FAILED: $(echo "$resp" | jq -c .)" >&2
+    echo "  If this says invalid_client, export ZOHO_ORG_ID=<org> first —" >&2
+    echo "  client credentials must be scoped to one Desk org via soid." >&2
+    exit 1
+  fi
+  echo "  ok — no refresh token needed; leave ZOHO_REFRESH_TOKEN empty"
+  AT="$(echo "$resp" | jq -r .access_token)"
+else
 resp="$(token_from refresh_token refresh_token "$VAL")"
 if echo "$resp" | jq -e '.access_token' >/dev/null 2>&1; then
   echo "  the value you passed is a REFRESH TOKEN — use it as ZOHO_REFRESH_TOKEN"
@@ -76,6 +97,7 @@ else
 fi
 
 AT="$(echo "$resp" | jq -r .access_token)"
+fi
 
 say "organizations"
 orgs="$(curl -s "$DESK/api/v1/organizations" -H "Authorization: Zoho-oauthtoken $AT")"

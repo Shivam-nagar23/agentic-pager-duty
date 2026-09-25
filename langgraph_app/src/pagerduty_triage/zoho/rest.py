@@ -62,25 +62,69 @@ class RestZohoDeskClient:
 
     # -- auth ----------------------------------------------------------------
 
-    def _access_token(self) -> str:
-        """Refresh-token grant, cached until shortly before expiry.
+    #: What a client-credentials token is minted for. Read-only on purpose:
+    #: `Desk.tickets.UPDATE` is what `sendReply` needs, so leaving it out makes
+    #: "cannot email a customer" a property of the credential rather than of a
+    #: flag somebody could flip.
+    DEFAULT_SCOPES = (
+        "Desk.tickets.READ,Desk.search.READ,Desk.basic.READ,"
+        "Desk.channels.email.READ"
+    )
 
-        Access tokens live 3600s. The refresh response returns **no new
-        refresh token** — the long-lived one in the environment stays put.
-        Zoho evicts refresh tokens at 20 active per client per user, so
-        minting new ones per process would silently break older deployments.
+    def _access_token(self) -> str:
+        """An access token, cached until shortly before expiry.
+
+        Two grants, chosen by whether a refresh token is configured.
+
+        **Client credentials** (no refresh token set) needs only the client id
+        and secret. Zoho's guidance is that Self Client suits "a stand-alone
+        application that performs only back-end jobs like data-sync (without
+        any manual intervention)", which is this poller exactly. It returns no
+        refresh token and is not supposed to: each expiry re-mints. That
+        removes the 10-minute one-time code from setup entirely — a step that
+        has failed twice here, once by being pasted into ZOHO_REFRESH_TOKEN and
+        once by expiring before use.
+
+        **Refresh token** (one is set) is kept because existing deployments
+        have one, and silently changing how they authenticate would be worse
+        than carrying both paths. The refresh response returns no new refresh
+        token; the long-lived one stays put. Zoho evicts refresh tokens at 20
+        active per client per user, so minting more per process would quietly
+        break older deployments.
+
+        Access tokens live 3600s either way.
         """
         if self._token and time.time() < self._token_expires_at - 120:
             return self._token
 
-        body = urllib.parse.urlencode(
-            {
+        if self._s.zoho_refresh_token:
+            params = {
                 "refresh_token": self._s.zoho_refresh_token,
                 "client_id": self._s.zoho_client_id,
                 "client_secret": self._s.zoho_client_secret,
                 "grant_type": "refresh_token",
             }
-        ).encode()
+        else:
+            if not self._s.zoho_org_id:
+                # `soid` scopes the token to one Desk org. Without it the token
+                # authenticates and then sees nothing -- a misconfiguration
+                # that looks exactly like a quiet support queue.
+                raise ZohoError(
+                    0,
+                    "config",
+                    "client-credentials auth needs ZOHO_ORG_ID (it becomes "
+                    "`soid=ZohoDesk.<org>`); set it, or set ZOHO_REFRESH_TOKEN "
+                    "to use the refresh-token grant instead.",
+                )
+            params = {
+                "client_id": self._s.zoho_client_id,
+                "client_secret": self._s.zoho_client_secret,
+                "grant_type": "client_credentials",
+                "scope": self.DEFAULT_SCOPES,
+                "soid": f"ZohoDesk.{self._s.zoho_org_id}",
+            }
+
+        body = urllib.parse.urlencode(params).encode()
         req = urllib.request.Request(
             f"{self._s.zoho_accounts_host}/oauth/v2/token", data=body, method="POST"
         )
