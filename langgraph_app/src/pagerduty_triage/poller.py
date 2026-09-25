@@ -53,6 +53,8 @@ decision from the owner about what a second reply should even do.
 
 from __future__ import annotations
 
+import os
+
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any, Protocol
@@ -131,6 +133,9 @@ class PollReport:
     skipped_seen: list[str] = field(default_factory=list)
     skipped_conflict: list[str] = field(default_factory=list)
     skipped_replied: list[str] = field(default_factory=list)
+    #: Created before ZOHO_MIN_CREATED_AT. Counted, never silent: a poller that
+    #: drops most of what it sees looks identical to a broken query.
+    skipped_old: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     capped: bool = False
 
@@ -140,6 +145,7 @@ class PollReport:
             f"skipped_seen={len(self.skipped_seen)} "
             f"skipped_conflict={len(self.skipped_conflict)} "
             f"skipped_replied={len(self.skipped_replied)} "
+            f"skipped_old={len(self.skipped_old)} "
             f"errors={len(self.errors)} capped={self.capped}"
         )
 
@@ -183,10 +189,25 @@ def poll_once(
 
     report.considered = len(tickets)
 
+    # Drawn once per tick, not per ticket.
+    cutover = os.environ.get("ZOHO_MIN_CREATED_AT", "").strip()
+
     for ticket in tickets:
         if len(report.started) >= MAX_NEW_THREADS_PER_TICK:
             report.capped = True
             break
+
+        # Pointing at an existing desk, the backlog is the problem, and the
+        # `modifiedTimeRange` window does not solve it: a customer replying to a
+        # three-day-old ticket bumps its modified time and it arrives looking
+        # exactly like new work. This draws a line at a creation instant.
+        #
+        # A blank `created_time` is NOT filtered. Missing data must not silently
+        # exclude a ticket — triaging one stale ticket is a cheaper mistake than
+        # dropping real work and never knowing.
+        if cutover and ticket.created_time and ticket.created_time < cutover:
+            report.skipped_old.append(ticket.id)
+            continue
 
         try:
             _start_one(
