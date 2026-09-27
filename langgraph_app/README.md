@@ -163,9 +163,11 @@ auto-instrumented. The module docstring has the full reasoning; the short form:
 Nothing about a ticket — text, ids, subjects, customer — is sent; tenant and
 environment come from the credential server-side.
 
-`acp-sdk` is not on PyPI. It installs from the private
-`abhibhaw/autopilot` repo over **SSH**, pinned to a commit SHA, so the image
-build needs read access to that repo.
+`acp-sdk` is not on PyPI and the build cannot reach the private
+`abhibhaw/autopilot` repo, so it is **vendored** in `vendor/acp-sdk/` and
+listed as its own entry in `langgraph.json` `dependencies`. Its OpenTelemetry
+pins are widened locally so it co-installs with `langgraph-api` — see
+`vendor/acp-sdk/VENDORED.md` for provenance, the patch, and how to re-sync.
 
 ## Deploying
 

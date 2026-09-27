@@ -10,12 +10,20 @@ resolution-markers = [
 [[package]]
 name = "acp-sdk"
 version = "0.1.0"
-source = { git = "ssh://git@github.com/abhibhaw/autopilot.git?subdirectory=packages%2Fpython-sdk&rev=33aefa6fa985e7eef40597ecd1f7991f1672d01a#33aefa6fa985e7eef40597ecd1f7991f1672d01a" }
+source = { directory = "vendor/acp-sdk" }
 dependencies = [
     { name = "httpx" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-sdk" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", specifier = "==0.28.1" },
+    { name = "opentelemetry-api", specifier = ">=1.42.1,<1.45" },
+    { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.42.1,<1.45" },
+    { name = "opentelemetry-sdk", specifier = ">=1.42.1,<1.45" },
 ]
 
 [[package]]
@@ -1533,7 +1541,7 @@ local = [
 
 [package.metadata]
 requires-dist = [
-    { name = "acp-sdk", git = "ssh://git@github.com/abhibhaw/autopilot.git?subdirectory=packages%2Fpython-sdk&rev=33aefa6fa985e7eef40597ecd1f7991f1672d01a" },
+    { name = "acp-sdk", directory = "vendor/acp-sdk" },
     { name = "deepagents", specifier = "==0.7.14" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "langchain", specifier = ">=1.4,<2" },

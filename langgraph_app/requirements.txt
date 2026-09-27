@@ -19,5 +19,5 @@ httpx>=0.27
 starlette>=0.37
 
 # Agent Production Control Plane discovery (src/pagerduty_triage/acp.py).
-# Private repo, pinned to a commit SHA (tip of `v2` when added).
-acp-sdk @ git+ssh://git@github.com/abhibhaw/autopilot.git@33aefa6fa985e7eef40597ecd1f7991f1672d01a#subdirectory=packages/python-sdk
+# Vendored from the private autopilot repo; see vendor/acp-sdk/VENDORED.md.
+./vendor/acp-sdk
