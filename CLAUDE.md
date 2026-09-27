@@ -235,6 +235,28 @@ Unattended draft PRs on Severity-1 RBAC bugs in infrastructure software: a
 plausible-but-wrong auth fix is a security hole that passes a green build. Raised
 and accepted. Mitigations are the invariants above plus human review at merge.
 
+## Control-plane discovery (autopilot) — BUILT, not yet verified in prod
+
+`langgraph_app/src/pagerduty_triage/acp.py`, tests in `tests/test_acp.py`. Registers the
+LangGraph deployment with the Agent Production Control Plane as agent key
+**`pagerduty-triage`** (framework `langgraph`) so it appears in the Agents inventory.
+`acp-sdk` 0.1.0 is pinned to autopilot commit `33aefa6` (tip of `v2`), installed over SSH
+from the private repo — **the platform image build needs read access to it.**
+
+- **Registration hangs off the custom app's Starlette lifespan**, which `langgraph-api`
+  enters in the API server *and* every queue worker (read from its source, 0.15.1). It
+  runs on a daemon thread: the platform warns at 10 s of lifespan startup and fails
+  readiness at 30 s, and the SDK's register retries can outlast that.
+- **Runs are a root-run callback** (`observe()` → `graph.with_config(callbacks=…)`) on all
+  three graphs, keyed by the platform run UUID. Verified: a run that parks on
+  `interrupt()` fires `on_chain_end`, not an error, so parking is `succeeded` and the
+  resume is a new run.
+- **Telemetry never crashes the agent** — failures log a fixed message plus the exception
+  *type*, never its text. A clean process therefore proves nothing; the evidence is the
+  `acp: registered workload_id=…` log line and the workload in the Agents list.
+- Never sent: ticket text, ids, subjects, customer identifiers, tenant, environment.
+  `execute_tool`/`get_action`/`resume_action` are deliberately unused.
+
 ## Slack approval for the human gates — BUILT
 
 Lives in `langgraph_app/src/pagerduty_triage/slack/`, 179 tests, no `slack_sdk`

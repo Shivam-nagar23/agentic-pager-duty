@@ -22,6 +22,11 @@ dependencies = [
     # platform runtime already ships Starlette; declared so `uvicorn
     # pagerduty_triage.slack.http_app:app` also works standalone.
     "starlette>=0.37",
+    # Agent Production Control Plane (autopilot) discovery: registration,
+    # heartbeats and run events. Not on PyPI; installed from the private
+    # autopilot repo, pinned to a commit SHA (the tip of `v2` when this was
+    # added) so a push to that branch cannot change what we deploy. See acp.py.
+    "acp-sdk @ git+ssh://git@github.com/abhibhaw/autopilot.git@33aefa6fa985e7eef40597ecd1f7991f1672d01a#subdirectory=packages/python-sdk",
 ]
 
 [project.optional-dependencies]
